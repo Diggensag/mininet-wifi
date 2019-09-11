@@ -1034,7 +1034,7 @@ class AccessPoint(AP):
         cmd = cmd + ("\nchannel=%s" % ap.params['channel'][wlan])
 
         if 'wep_key0' in ap.params:
-            cmd = cmd + cls.verifyWepKey(ap.wep_key0[wlan])
+            cmd = cmd + self.verifyWepKey(ap.wep_key0[wlan])
 
         if ap.params['mode'][wlan] == 'ac':
             cmd = cmd + ("\nwmm_enabled=1")
