@@ -404,10 +404,43 @@ class testWalkthrough(unittest.TestCase):
         p.sendline('exit')
         p.wait()
 
-    def testAuthentication(self):
+    def testWPAAuthentication(self):
         "Start Mininet-WiFi using WPA, then test ping"
         p = pexpect.spawn(
-            'python examples/authentication.py')
+            'python examples/authentication.py -1')
+        sleep(3)
+        p.sendline('sta1 ping -c1 sta2')
+        p.expect('1 packets transmitted, 1 received')
+        p.expect(self.prompt)
+        p.sendline('exit')
+        p.wait()
+
+    def testWPA2Authentication(self):
+        "Start Mininet-WiFi using WPA2, then test ping"
+        p = pexpect.spawn(
+            'python examples/authentication.py -2')
+        sleep(3)
+        p.sendline('sta1 ping -c1 sta2')
+        p.expect('1 packets transmitted, 1 received')
+        p.expect(self.prompt)
+        p.sendline('exit')
+        p.wait()
+
+    def testWPA3Authentication(self):
+        "Start Mininet-WiFi using WPA3, then test ping"
+        p = pexpect.spawn(
+            'python examples/authentication.py -3')
+        sleep(3)
+        p.sendline('sta1 ping -c1 sta2')
+        p.expect('1 packets transmitted, 1 received')
+        p.expect(self.prompt)
+        p.sendline('exit')
+        p.wait()
+
+    def testWEPAuthentication(self):
+        "Start Mininet-WiFi using WEP, then test ping"
+        p = pexpect.spawn(
+            'python examples/authentication.py -4')
         sleep(3)
         p.sendline('sta1 ping -c1 sta2')
         p.expect('1 packets transmitted, 1 received')

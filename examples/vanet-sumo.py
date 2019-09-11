@@ -33,23 +33,29 @@ def topology():
                                ))
 
     e1 = net.addAccessPoint('e1', ssid='vanet-ssid', mac='00:00:00:11:00:01',
-                            mode='g', channel='1', passwd='123456789a',
-                            encrypt='wpa2', position='3279.02,3736.27,0')
+                            mode='g', channel='1', wpa_passphrase='123456789a',
+                            wpa='2', auth_algs='1', wpa_key_mgmt='WPA-PSK',
+                            wpa_pairwise='CCMP', position='3279.02,3736.27,0')
     e2 = net.addAccessPoint('e2', ssid='vanet-ssid', mac='00:00:00:11:00:02',
-                            mode='g', channel='6', passwd='123456789a',
-                            encrypt='wpa2', position='2320.82,3565.75,0')
+                            mode='g', channel='6', wpa_passphrase='123456789a',
+                            wpa='2', auth_algs='1', wpa_key_mgmt='WPA-PSK',
+                            wpa_pairwise='CCMP', position='2320.82,3565.75,0')
     e3 = net.addAccessPoint('e3', ssid='vanet-ssid', mac='00:00:00:11:00:03',
-                            mode='g', channel='11', passwd='123456789a',
-                            encrypt='wpa2', position='2806.42,3395.22,0')
+                            mode='g', channel='11', wpa_passphrase='123456789a',
+                            wpa='2', auth_algs='1', wpa_key_mgmt='WPA-PSK',
+                            wpa_pairwise='CCMP', position='2806.42,3395.22,0')
     e4 = net.addAccessPoint('e4', ssid='vanet-ssid', mac='00:00:00:11:00:04',
-                            mode='g', channel='1', passwd='123456789a',
-                            encrypt='wpa2', position='3332.62,3253.92,0')
+                            mode='g', channel='1', wpa_passphrase='123456789a',
+                            wpa='2', auth_algs='1', wpa_key_mgmt='WPA-PSK',
+                            wpa_pairwise='CCMP', position='3332.62,3253.92,0')
     e5 = net.addAccessPoint('e5', ssid='vanet-ssid', mac='00:00:00:11:00:05',
-                            mode='g', channel='6', passwd='123456789a',
-                            encrypt='wpa2', position='2887.62,2935.61,0')
+                            mode='g', channel='6', wpa_passphrase='123456789a',
+                            wpa='2', auth_algs='1', wpa_key_mgmt='WPA-PSK',
+                            wpa_pairwise='CCMP', position='2887.62,2935.61,0')
     e6 = net.addAccessPoint('e6', ssid='vanet-ssid', mac='00:00:00:11:00:06',
-                            mode='g', channel='11', passwd='123456789a',
-                            encrypt='wpa2', position='2351.68,3083.40,0')
+                            mode='g', channel='11', wpa_passphrase='123456789a',
+                            wpa='2', auth_algs='1', wpa_key_mgmt='WPA-PSK',
+                            wpa_pairwise='CCMP', position='2351.68,3083.40,0')
     c1 = net.addController('c1')
 
     info("*** Configuring Propagation Model\n")

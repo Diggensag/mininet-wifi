@@ -978,35 +978,6 @@ class AccessPoint(AP):
         :param wlan: wlan id
         :param link: if wmediumd"""
         if ap.params['ssid'][wlan] != '' or ssid:
-            if 'encrypt' in ap.params and 'config' not in ap.params:
-                if ap.params['encrypt'][wlan] == 'wpa':
-                    ap.auth_algs = 1
-                    if 'ieee80211r' in ap.params \
-                            and ap.params['ieee80211r'] == 'yes':
-                        ap.wpa_key_mgmt = 'FT-EAP'
-                    else:
-                        ap.wpa_key_mgmt = 'WPA-EAP'
-                    ap.rsn_pairwise = 'TKIP CCMP'
-                    ap.wpa_passphrase = ap.params['passwd'][wlan]
-                elif ap.params['encrypt'][wlan] == 'wpa2' \
-                        or ap.params['encrypt'][wlan] == 'wpa3':
-                    ap.auth_algs = 1
-                    if 'ieee80211r' in ap.params \
-                            and ap.params['ieee80211r'] == 'yes' \
-                            and 'authmode' not in ap.params:
-                        ap.wpa_key_mgmt = 'FT-PSK'
-                    elif 'authmode' in ap.params \
-                            and ap.params['authmode'][wlan] == '8021x':
-                        ap.wpa_key_mgmt = 'WPA-EAP'
-                    else:
-                        ap.wpa_key_mgmt = 'WPA-PSK'
-                    ap.rsn_pairwise = 'CCMP'
-                    if 'authmode' not in ap.params:
-                        ap.wpa_passphrase = ap.params['passwd'][wlan]
-                elif ap.params['encrypt'][wlan] == 'wep':
-                    ap.auth_algs = 2
-                    ap.wep_key0 = ap.params['passwd'][wlan]
-
             if ap.params['mode'][wlan] == 'adhoc':
                 ap.func[wlan] = 'adhoc'
             else:
@@ -1014,8 +985,21 @@ class AccessPoint(AP):
 
     def setHostapdConfig(self, ap, wlan, aplist=None, link=None):
         "Set hostapd config"
+
+        args_ = ['wpa_key_mgmt', 'wpa_passphrase', 'rsn_pairwise', 'auth_algs',
+                 'wpa_pairwise', 'wds_sta', 'eap_server', 'ca_cert', 'server_cert',
+                 'private_key', 'rsn_preauth', 'beacon_int', 'max_num_sta', 'ap_isolate',
+                 'ht_capab', 'wpa', 'wep_key0', 'identity', 'scan_ssid', 'ca_cert',
+                 'client_cert', 'private_key', 'server_cert', 'eapol_key_index_workaround',
+                 'own_ip_addr', 'nas_identifier', 'auth_server_addr', 'auth_server_port',
+                 'shared_secret', 'radius_server', 'eapol_version', 'ieee8021x', 'phase2'
+                 'eap']
+
+        for arg in args_:
+            if arg in ap.params:
+                setattr(ap, arg, ap.params[arg])
+
         cmd = ("echo \'")
-        args = ['max_num_sta', 'beacon_int', 'rsn_preauth']
 
         if 'phywlan' in ap.params:
             cmd = cmd + ("interface=%s" % ap.params.get('phywlan'))
@@ -1048,95 +1032,52 @@ class AccessPoint(AP):
             cmd = cmd + ("\nhw_mode=%s" % ap.params['mode'][wlan])
         cmd = cmd + ("\nchannel=%s" % ap.params['channel'][wlan])
 
-        for arg in args:
-            if arg in ap.params:
-                cmd = cmd + ('\n%s=%s' % (arg, ap.params[arg]))
-
-        if 'ht_capab' in ap.params:
-            cmd = cmd + ('\nht_capab=%s' % ap.params['ht_capab'])
-        if 'beacon_int' in ap.params:
-            cmd = cmd + ('\nbeacon_int=%s' % ap.params['beacon_int'])
-        if 'isolate_clients' in ap.params:
-            cmd = cmd + ('\nap_isolate=1')
-        if 'config' in ap.params:
-            config = ap.params['config']
-            if config is not []:
-                config = ap.params['config'].split(',')
-                # ap.params.pop("config", None)
-                for conf in config:
-                    cmd = cmd + "\n" + conf
-        else:
-            if 'authmode' in ap.params and ap.params['authmode'][0] == '8021x':
-                cmd = cmd + ("\nieee8021x=1")
-                cmd = cmd + ("\nwpa_key_mgmt=WPA-EAP")
-                if 'encrypt' in ap.params:
-                    cmd = cmd + ("\nauth_algs=%s" % ap.auth_algs)
+        if 'encrypt' in ap.params:
+            if 'wpa' in ap.params['encrypt'][wlan]:
+                if ap.params['encrypt'][wlan] == 'wpa2' \
+                        or ap.params['encrypt'][wlan] == 'wpa3':
                     cmd = cmd + ("\nwpa=2")
-                cmd = cmd + ('\neap_server=0')
-                cmd = cmd + ('\neapol_version=2')
+                else:
+                    cmd = cmd + ("\nwpa=1")
+                if ap.params['encrypt'][wlan] == 'wpa3':
+                    cmd = cmd + ("\nwpa_key_mgmt=WPA-PSK SAE")
+            elif 'wep_key0' in ap.params:
+                cmd = cmd + cls.verifyWepKey(ap.wep_key0[wlan])
 
-                if 'radius_server' not in ap.params:
-                    ap.params['radius_server'] = []
-                    ap.params['radius_server'].append('127.0.0.1')
-                cmd = cmd + ("\nwpa_pairwise=TKIP CCMP")
-                cmd = cmd + ("\neapol_key_index_workaround=0")
-                cmd = cmd + ("\nown_ip_addr=%s" % ap.params['radius_server'][0])
-                cmd = cmd + ("\nnas_identifier=%s.example.com" % ap.name)
-                cmd = cmd + ("\nauth_server_addr=%s"
-                             % ap.params['radius_server'][0])
-                cmd = cmd + ("\nauth_server_port=1812")
-                if 'shared_secret' not in ap.params:
-                    ap.params['shared_secret'] = 'secret'
-                cmd = cmd + ("\nauth_server_shared_secret=%s"
-                             % ap.params['shared_secret'])
-            else:
-                if 'encrypt' in ap.params:
-                    if 'wpa' in ap.params['encrypt'][wlan]:
-                        cmd = cmd + ("\nauth_algs=%s" % ap.auth_algs)
-                        if ap.params['encrypt'][wlan] == 'wpa2' \
-                                or ap.params['encrypt'][wlan] == 'wpa3':
-                            cmd = cmd + ("\nwpa=2")
-                        else:
-                            cmd = cmd + ("\nwpa=1")
-                        if ap.params['encrypt'][wlan] == 'wpa3':
-                            cmd = cmd + ("\nwpa_key_mgmt=WPA-PSK SAE")
-                        else:
-                            cmd = cmd + ("\nwpa_key_mgmt=%s" % ap.wpa_key_mgmt)
-                        cmd = cmd + ("\nwpa_pairwise=%s" % ap.rsn_pairwise)
-                        cmd = cmd + ("\nwpa_passphrase=%s" % ap.wpa_passphrase)
-                    elif ap.params['encrypt'][wlan] == 'wep':
-                        cmd = cmd + ("\nauth_algs=%s" % ap.auth_algs)
-                        cmd = cmd + ("\nwep_default_key=%s" % 0)
-                        cmd = cmd + cls.verifyWepKey(ap.wep_key0)
+        if ap.params['mode'][wlan] == 'ac':
+            cmd = cmd + ("\nwmm_enabled=1")
+            cmd = cmd + ("\nieee80211ac=1")
+        elif ap.params['mode'][wlan] == 'n':
+            cmd = cmd + ("\nwmm_enabled=1")
+            cmd = cmd + ("\nieee80211n=1")
 
-                if ap.params['mode'][wlan] == 'ac':
-                    cmd = cmd + ("\nwmm_enabled=1")
-                    cmd = cmd + ("\nieee80211ac=1")
-                elif ap.params['mode'][wlan] == 'n':
-                    cmd = cmd + ("\nwmm_enabled=1")
-                    cmd = cmd + ("\nieee80211n=1")
+        if 'ieee80211r' in ap.params and \
+                        ap.params['ieee80211r'] is 'yes':
+            if 'mobility_domain' in ap.params:
+                cmd = cmd + ("\nmobility_domain=%s" %
+                             ap.params['mobility_domain'])
+                # cmd = cmd + ("\nown_ip_addr=127.0.0.1")
+                cmd = cmd + ("\nnas_identifier=%s.example.com"
+                             % ap.name)
+                for apref in aplist:
+                    cmd = cmd + ('\nr0kh=%s r0kh-%s.example.com '
+                                 '000102030405060708090a0b0c0d0e0f'
+                                 % (apref.params['mac'][wlan],
+                                    aplist.index(apref)))
+                    cmd = cmd + ('\nr1kh=%s %s '
+                                 '000102030405060708090a0b0c0d0e0f'
+                                 % (apref.params['mac'][wlan],
+                                    apref.params['mac'][wlan]))
+                #cmd = cmd + ('\nrsn_preauth=1')
+                cmd = cmd + ('\npmk_r1_push=1')
+                cmd = cmd + ('\nft_over_ds=1')
+                cmd = cmd + ('\nft_psk_generate_local=1')
 
-                if 'ieee80211r' in ap.params and \
-                                ap.params['ieee80211r'] is 'yes':
-                    if 'mobility_domain' in ap.params:
-                        cmd = cmd + ("\nmobility_domain=%s" %
-                                     ap.params['mobility_domain'])
-                        # cmd = cmd + ("\nown_ip_addr=127.0.0.1")
-                        cmd = cmd + ("\nnas_identifier=%s.example.com"
-                                     % ap.name)
-                        for apref in aplist:
-                            cmd = cmd + ('\nr0kh=%s r0kh-%s.example.com '
-                                         '000102030405060708090a0b0c0d0e0f'
-                                         % (apref.params['mac'][wlan],
-                                            aplist.index(apref)))
-                            cmd = cmd + ('\nr1kh=%s %s '
-                                         '000102030405060708090a0b0c0d0e0f'
-                                         % (apref.params['mac'][wlan],
-                                            apref.params['mac'][wlan]))
-                        #cmd = cmd + ('\nrsn_preauth=1')
-                        cmd = cmd + ('\npmk_r1_push=1')
-                        cmd = cmd + ('\nft_over_ds=1')
-                        cmd = cmd + ('\nft_psk_generate_local=1')
+        for arg in args_:
+            if arg in ap.params:
+                cmd = cmd + ('\n%s=%s' % (arg, ap.params[arg][wlan]))
+
+
         if 'vssids' in ap.params:
             for i in range(1, ap.params['vssids']+1):
                 ap.params['txpower'].append(ap.params['txpower'][wlan])
@@ -1147,10 +1088,8 @@ class AccessPoint(AP):
                 cmd = cmd + ("\nbss=%s" % ap.params['wlan'][i])
                 cmd = cmd + ("\nssid=%s" % ssid)
                 if 'encrypt' in ap.params:
-                    if ap.params['encrypt'][i] == 'wep':
-                        cmd = cmd + ("\nauth_algs=%s" % ap.auth_algs)
-                        cmd = cmd + ("\nwep_default_key=0")
-                        cmd = cmd + cls.verifyWepKey(ap.wep_key0)
+                    if 'wep_key0' in ap.params:
+                        cmd = cmd + cls.verifyWepKey(ap.wep_key0[wlan])
                 ap.params['mac'][i] = ap.params['mac'][wlan][:-1] + str(i)
         cmd = cmd + ("\nctrl_interface=/var/run/hostapd")
         cmd = cmd + ("\nctrl_interface_group=0")

@@ -2976,10 +2976,10 @@ class MiniEdit( Frame ):
                         f.write(", ip='" + opts['apIP'] + "'")
                     if 'authentication' in opts and opts['authentication'] != 'none':
                         if opts['authentication'] == '8021x':
-                            f.write(", encrypt='wpa2', authmode='8021x'")
+                            f.write(", wpa='2', authmode='8021x'")
                         else:
-                            f.write(", encrypt='" + opts['authentication'] +
-                                    "',\n                             passwd='" + opts['passwd'] + "'")
+                            f.write(", wpa='" + opts['authentication'] +
+                                    "',\n                             wpa_passphrase='" + opts['wpa_passphrase'] + "'")
                     f.write(", position='"+str(x1)+","+str(y1)+",0'")
                     if opts['range'] != 'default':
                         f.write(", range=" + str(opts['range']) + "")
@@ -3046,10 +3046,10 @@ class MiniEdit( Frame ):
                     if 'authentication' in opts and opts['authentication']:
                         args_ = ['wpa', 'wpa2', 'wep']
                         if opts['authentication'] in args_:
-                            args += ", encrypt='%s'" % opts['authentication']
-                    if 'passwd' in opts and opts['passwd']:
-                        if opts['passwd'] != '':
-                            args += ", passwd='%s'" % opts['passwd']
+                            args += ", wpa='%s'" % opts['authentication']
+                    if 'wpa_passphrase' in opts and opts['wpa_passphrase']:
+                        if opts['wpa_passphrase'] != '':
+                            args += ", wpa_passphrase='%s'" % opts['wpa_passphrase']
                     if 'user' in opts and opts['user']:
                         if opts['user'] != '':
                             args += ", radius_identity='%s'" % opts['user']

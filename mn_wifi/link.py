@@ -1453,8 +1453,8 @@ class Association(IntfWireless):
         associated = 0
 
         if 'ieee80211r' in ap.params and ap.params['ieee80211r'] == 'yes' \
-        and ('encrypt' not in sta.params or 'encrypt' in sta.params and
-             'wpa' in sta.params['encrypt'][wlan]):
+        and ('wpa' and 'wep_key0' not in sta.params or ('wpa' and 'wep_key0') in sta.params and
+             'wpa' in sta.params):
             if not sta.params['associatedTo'][wlan]:
                 command = ('ps -aux | grep %s | wc -l' % sta.params['wlan'][wlan])
                 np = int(subprocess.check_output(command, shell=True))
@@ -1465,17 +1465,15 @@ class Association(IntfWireless):
             else:
                 cls.handover_ieee80211r(sta, ap, wlan, ap_wlan)
             associated = 1
-        elif 'encrypt' not in ap.params:
+        elif 'wpa' not in ap.params and 'wep_key0' not in ap.params and 'eap' not in ap.params:
             associated = 1
             cls.associate_noEncrypt(sta, ap, wlan, ap_wlan)
         else:
             if not sta.params['associatedTo'][wlan]:
-                if 'wpa' in ap.params['encrypt'][ap_wlan] \
-                and ('encrypt' not in sta.params or 'encrypt' in sta.params and
-                     'wpa' in sta.params['encrypt'][wlan]):
+                if 'wpa' in ap.params or 'wpa' in sta.params or 'eap' in ap.params:
                     cls.wpa(sta, ap, wlan, ap_wlan)
                     associated = 1
-                elif ap.params['encrypt'][ap_wlan] == 'wep':
+                elif 'wep_key0' in ap.params:
                     cls.wep(sta, ap, wlan, ap_wlan)
                     associated = 1
         if 'printCon' in params:
@@ -1491,55 +1489,38 @@ class Association(IntfWireless):
         :param sta: station
         :param ap: access point
         :param wlan: wlan ID"""
-        if 'config' not in ap.params or 'config' not in sta.params:
-            if 'authmode' not in ap.params:
-                if 'passwd' not in sta.params:
-                    passwd = ap.params['passwd'][ap_wlan]
-                else:
-                    passwd = sta.params['passwd'][wlan]
+        if 'psk' in sta.params:
+            passwd = sta.params['psk'][wlan]
+        else:
+            passwd = ap.params['wpa_passphrase'][ap_wlan]
 
         cmd = 'ctrl_interface=/var/run/wpa_supplicant\nnetwork={\n'
 
-        if 'config' in sta.params:
-            config = sta.params['config']
-            if config is not []:
-                config = sta.params['config'].split(',')
-                sta.params.pop("config", None)
-                for conf in config:
-                    cmd += "   " + conf + "\n"
-        else:
-            cmd += '   ssid=\"%s\"\n' % ap.params['ssid'][ap_wlan]
-            if 'authmode' not in ap.params:
-                cmd += '   psk=\"%s\"\n' % passwd
-                encrypt = ap.params['encrypt'][ap_wlan]
-                if ap.params['encrypt'][ap_wlan] == 'wpa3':
-                    encrypt = 'wpa2'
-                cmd += '   proto=%s\n' % encrypt.upper()
-                cmd += '   pairwise=%s\n' % ap.rsn_pairwise
-                if 'active_scan' in sta.params and sta.params['active_scan'] == 1:
-                    cmd += '   scan_ssid=1\n'
-                if 'scan_freq' in sta.params and sta.params['scan_freq'][wlan]:
-                    cmd += '   scan_freq=%s\n' % sta.params['scan_freq'][wlan]
-                if 'freq_list' in sta.params and sta.params['freq_list'][wlan]:
-                    cmd += '   freq_list=%s\n' % sta.params['freq_list'][wlan]
-            wpa_key_mgmt = ap.wpa_key_mgmt
-            if ap.params['encrypt'][ap_wlan] == 'wpa3':
-                wpa_key_mgmt = 'SAE'
-            cmd += '   key_mgmt=%s\n' % wpa_key_mgmt
-            if 'bgscan_threshold' in sta.params:
-                if 'bgscan_module' not in sta.params:
-                    sta.params['bgscan_module'] = 'simple'
-                bgscan = 'bgscan=\"%s:%d:%d:%d\"' % \
-                         (sta.params['bgscan_module'],
-                          sta.params['s_inverval'],
-                          sta.params['bgscan_threshold'],
-                          sta.params['l_interval'])
-                cmd += '   %s\n' % bgscan
-            if 'authmode' in ap.params and ap.params['authmode'][0] == '8021x':
-                cmd += '   eap=PEAP\n'
-                cmd += '   identity=\"%s\"\n' % sta.params['radius_identity']
-                cmd += '   password=\"%s\"\n' % sta.params['radius_passwd']
-                cmd += '   phase2=\"autheap=MSCHAPV2\"\n'
+        cmd += '   ssid=\"%s\"\n' % ap.params['ssid'][ap_wlan]
+        if 'ieee8021x' not in ap.params:
+            cmd += '   psk=\"%s\"\n' % passwd
+            encrypt = 'wpa'
+            if ap.params['wpa'][ap_wlan] == '2':
+                encrypt += '2'
+            cmd += '   proto=%s\n' % encrypt.upper()
+            cmd += '   pairwise=%s\n' % ap.wpa_pairwise[ap_wlan]
+            if 'active_scan' in sta.params and sta.params['active_scan'] == 1:
+                cmd += '   scan_ssid=1\n'
+            if 'scan_freq' in sta.params and sta.params['scan_freq'][wlan]:
+                cmd += '   scan_freq=%s\n' % sta.params['scan_freq'][wlan]
+            if 'freq_list' in sta.params and sta.params['freq_list'][wlan]:
+                cmd += '   freq_list=%s\n' % sta.params['freq_list'][wlan]
+        wpa_key_mgmt = ap.wpa_key_mgmt
+        cmd += '   key_mgmt=%s\n' % wpa_key_mgmt[ap_wlan]
+        if 'bgscan_threshold' in sta.params:
+            if 'bgscan_module' not in sta.params:
+                sta.params['bgscan_module'] = 'simple'
+            bgscan = 'bgscan=\"%s:%d:%d:%d\"' % \
+                     (sta.params['bgscan_module'],
+                      sta.params['s_inverval'],
+                      sta.params['bgscan_threshold'],
+                      sta.params['l_interval'])
+            cmd += '   %s\n' % bgscan
         cmd += '}'
 
         fileName = '%s_%s.staconf' % (sta.name, wlan)
@@ -1571,10 +1552,10 @@ class Association(IntfWireless):
         :param sta: station
         :param ap: access point
         :param wlan: wlan ID"""
-        if 'passwd' not in sta.params:
-            passwd = ap.params['passwd'][ap_wlan]
+        if 'wep_key0' in sta.params:
+            passwd = sta.params['wep_key0'][wlan]
         else:
-            passwd = sta.params['passwd'][wlan]
+            passwd = ap.params['wep_key0'][ap_wlan]
         sta.pexec('iw dev %s connect %s key d:0:%s' \
                 % (sta.params['wlan'][wlan], ap.params['ssid'][ap_wlan], passwd))
 

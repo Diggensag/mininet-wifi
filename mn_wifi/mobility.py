@@ -117,8 +117,8 @@ class mobility(object):
         :param ap: access point
         :param wlan: wlan ID"""
         if ap == sta.params['associatedTo'][wlan]:
-            if 'encrypt' in ap.params and 'ieee80211r' not in ap.params:
-                if 'wpa' in ap.params['encrypt'][ap_wlan]:
+            if 'wep_key0' in ap.params and 'wpa' in ap.params and 'ieee80211r' not in ap.params:
+                if 'wpa' in ap.params:
                     os.system('rm %s_%s.staconf' % (sta.name, wlan))
                     pidfile = "mn%d_%s_%s_wpa.pid" \
                               % (os.getpid(), sta.name, wlan)
@@ -163,8 +163,7 @@ class mobility(object):
             if sta not in ap.params['associatedStations']:
                 ap.params['associatedStations'].append(sta)
             if dist >= 0.01:
-                if 'bgscan_threshold' in sta.params or 'active_scan' in sta.params \
-                and ('encrypt' in sta.params and 'wpa' in sta.params['encrypt'][wlan]):
+                if 'bgscan_threshold' in sta.params or 'active_scan' in sta.params and ('wpa' in sta.params):
                     pass
                 else :
                     sta.params['rssi'][wlan] = rssi
@@ -241,8 +240,8 @@ class mobility(object):
                         for ap_wlan in range(len(ap.params['wlan'])):
                             if ap.func[ap_wlan] != 'mesh' and ap.func[ap_wlan] != 'adhoc':
                                 if cls.wmediumd_mode == 3:
-                                    if 'bgscan_threshold' in node.params or ('active_scan' in node.params \
-                                    and ('encrypt' in node.params and 'wpa' in node.params['encrypt'][wlan])):
+                                    if 'bgscan_threshold' in node.params or ('active_scan' in
+                                                                             node.params and 'wpa' in node.params):
                                         if node.params['associatedTo'][wlan] == '':
                                             Association.associate_infra(node, ap, wlan=wlan,
                                                                         ap_wlan=ap_wlan)

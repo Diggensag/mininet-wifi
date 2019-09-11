@@ -1344,10 +1344,13 @@ class Mininet_wifi(Mininet):
         node.phyID = []
         node.ifaceToAssociate = 0
 
-        array_ = ['passwd', 'scan_freq', 'freq_list', 'authmode',
-                  'encrypt', 'radius_server', 'bw']
+        args_ = ['psk', 'scan_freq', 'freq_list', 'authmode', 'wpa_key_mgmt', 'wpa_pairwise',
+                 'wpa_passphrase', 'wpa', 'radius_server', 'bw', 'auth_algs', 'wep_key0',
+                 'identity', 'scan_ssid', 'ca_cert', 'client_cert', 'private_key', 'eapol_key_index_workaround',
+                 'own_ip_addr', 'nas_identifier', 'auth_server_addr', 'server_cert', 'auth_server_port',
+                 'shared_secret', 'radius_server', 'eapol_version', 'ieee8021x', 'phase2', 'eap']
         for param in params:
-            if param in array_:
+            if param in args_:
                 list = params[param].split(',')
                 if len(list) != params['wlans']:
                     error('*** Error: len(%s) != wlans\n' % param)
@@ -1361,11 +1364,11 @@ class Mininet_wifi(Mininet):
             node.params['associatedTo'] = []
             node.params['rssi'] = []
 
-        array_ = ['speed', 'max_x', 'max_y', 'min_x', 'min_y',
-                  'min_v', 'max_v', 'constantVelocity', 'constantDistance',
-                  'min_speed', 'max_speed']
+        args_ = ['speed', 'max_x', 'max_y', 'min_x', 'min_y',
+                 'min_v', 'max_v', 'constantVelocity', 'constantDistance',
+                 'min_speed', 'max_speed']
         for param in params:
-            if param in array_:
+            if param in args_:
                 setattr(node, param, float(params[param]))
 
         # position
@@ -1466,16 +1469,6 @@ class Mininet_wifi(Mininet):
                 ssid_list = params['ssid'].split(',')
                 for ssid in ssid_list:
                     node.params['ssid'].append(ssid)
-
-            if 'config' in node.params:
-                config = node.params['config'].split(',')
-                for conf in config:
-                    if 'wpa=' in conf or 'wep=' in conf:
-                        node.params['encrypt'] = []
-                        if 'wpa=' in conf:
-                            node.params['encrypt'].append('wpa')
-                        else:
-                            node.params['encrypt'].append('wep')
 
     def pos_to_array(self, node, pos):
         if isinstance(pos, string_types):

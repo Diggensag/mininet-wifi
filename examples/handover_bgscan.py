@@ -29,15 +29,19 @@ def topology():
                    bgscan_threshold=-60,
                    s_inverval=5,
                    l_interval=10)
+
     ap1 = net.addAccessPoint('ap1', mac='00:00:00:00:00:01', ssid="handover",
-                             mode="g", channel="1", passwd='123456789a',
-                             encrypt='wpa2', position='10,30,0')
+                             mode="g", channel="1", wpa_passphrase='123456789a',
+                             wpa='2', auth_algs='1', wpa_key_mgmt='WPA-PSK',
+                             wpa_pairwise='CCMP', position='10,30,0')
     ap2 = net.addAccessPoint('ap2', mac='00:00:00:00:00:02', ssid="handover",
-                             mode="g", channel="6", passwd='123456789a',
-                             encrypt='wpa2', position='60,30,0')
+                             mode="g", channel="6", wpa_passphrase='123456789a',
+                             wpa='2', auth_algs='1', wpa_key_mgmt='WPA-PSK',
+                             wpa_pairwise='CCMP', position='60,30,0')
     ap3 = net.addAccessPoint('ap3', mac='00:00:00:00:00:03', ssid="handover",
-                             mode="g", channel="1", passwd='123456789a',
-                             encrypt='wpa2', position='120,100,0')
+                             mode="g", channel="1", wpa_passphrase='123456789a',
+                             wpa='2', auth_algs='1', wpa_key_mgmt='WPA-PSK',
+                             wpa_pairwise='CCMP', position='120,100,0')
     c1 = net.addController('c1')
 
     info("*** Configuring Propagation Model\n")

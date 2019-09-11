@@ -17,13 +17,18 @@ def topology():
                         link=wmediumd, wmediumd_mode=interference )
 
     info("*** Creating nodes\n")
-    sta1 = net.addStation( 'sta1', radius_passwd='sdnteam', encrypt='wpa2',
-                           radius_identity='joe', position='110,120,0' )
-    sta2 = net.addStation( 'sta2', radius_passwd='hello', encrypt='wpa2',
-                           radius_identity='bob', position='200,100,0' )
-    ap1 = net.addAccessPoint( 'ap1', ssid='simplewifi', authmode='8021x',
-                              mode='a', channel='36', encrypt='wpa2', position='150,100,0' )
-    c0 = net.addController('c0', controller=Controller, ip='127.0.0.1', port=6653 )
+    sta1 = net.addStation('sta1', password='sdnteam', wpa='2', eap='PEAP',
+                          identity='joe', phase2='autheap=MSCHAPV2', position='110,120,0')
+    sta2 = net.addStation('sta2', password='hello', wpa='2',
+                          identity='bob', phase2='autheap=MSCHAPV2', position='200,100,0')
+    ap1 = net.addAccessPoint('ap1', ssid='simplewifi', ieee8021x='1',
+                             mode='a', channel='36', wpa='2', wpa_key_mgmt='WPA-EAP', auth_algs='1',
+                             eap_server='0', eapol_version='2', wpa_pairwise='TKIP CCMP',
+                             eapol_key_index_workaround='0', own_ip_addr='127.0.0.1',
+                             nas_identifier='ap1.example.com', auth_server_addr='127.0.0.1',
+                             radius_server='127.0.0.1', auth_server_port='1812',
+                             shared_secret='secret', position='150,100,0')
+    c0 = net.addController('c0', controller=Controller, ip='127.0.0.1', port=6653)
 
     info("*** Configuring Propagation Model\n")
     net.setPropagationModel(model="logDistance", exp=3.5)
