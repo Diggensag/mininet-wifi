@@ -1348,7 +1348,9 @@ class Mininet_wifi(Mininet):
                  'wpa_passphrase', 'wpa', 'radius_server', 'bw', 'auth_algs', 'wep_key0',
                  'identity', 'scan_ssid', 'ca_cert', 'client_cert', 'private_key', 'eapol_key_index_workaround',
                  'own_ip_addr', 'nas_identifier', 'auth_server_addr', 'server_cert', 'auth_server_port',
-                 'shared_secret', 'radius_server', 'eapol_version', 'ieee8021x', 'phase2', 'eap']
+                 'shared_secret', 'radius_server', 'eapol_version', 'ieee8021x', 'phase2', 'eap',
+                 'ieee80211r', 'mobility_domain', 'nas_identifier', 'r0kh', 'r1kh',
+                 'pmk_r1_push', 'ft_over_ds', 'ft_psk_generate_local']
         for param in params:
             if param in args_:
                 list = params[param].split(',')

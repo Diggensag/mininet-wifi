@@ -1453,8 +1453,8 @@ class Association(IntfWireless):
         associated = 0
 
         if 'ieee80211r' in ap.params and ap.params['ieee80211r'] == 'yes' \
-        and ('wpa' and 'wep_key0' not in sta.params or ('wpa' and 'wep_key0') in sta.params and
-             'wpa' in sta.params):
+        and ('wpa' not in sta.params and 'wep_key0' not in sta.params or
+             ('wpa' not in sta.param and 'wep_key0' in sta.params) and 'wpa' in sta.params):
             if not sta.params['associatedTo'][wlan]:
                 command = ('ps -aux | grep %s | wc -l' % sta.params['wlan'][wlan])
                 np = int(subprocess.check_output(command, shell=True))
