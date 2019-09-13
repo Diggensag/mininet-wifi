@@ -109,67 +109,77 @@ class mobility(object):
         :param diff_time: difference between start and stop time. Useful for
         calculating the speed"""
         node.params['speed'] = round(abs(((pos_x + pos_y + pos_z) /
-                                          diff_time)),2)
+                                          diff_time)), 2)
+
+    @classmethod
+    def remove_staconf(cls, sta, wlan):
+        os.system('rm %s_%s.staconf' % (sta.name, wlan))
+
+    @classmethod
+    def get_pidfile(cls, sta, wlan):
+        pidfile = "mn%d_%s_%s_wpa.pid" \
+                  % (os.getpid(), sta.name, wlan)
+        return pidfile
+
+    @classmethod
+    def kill_wpasupprocess(cls, sta, wlan):
+        os.system('pkill -f \'wpa_supplicant -B -Dnl80211 -P %s -i '
+                  '%s\'' % (cls.get_pidfile(sta, wlan), sta.params['wlan'][wlan]))
+
+    @classmethod
+    def check_if_wpafile_exist(cls, sta, wlan):
+        file = '/var/run/wpa_supplicant/%s' % sta.params['wlan'][wlan]
+        if os.path.exists(file):
+            os.system(file)
+
+    @classmethod
+    def remove_assoc_from_params(cls, sta, ap):
+        if sta in ap.params['associatedStations']:
+            ap.params['associatedStations'].remove(sta)
+        if ap in sta.params['apsInRange']:
+            sta.params['apsInRange'].pop(ap, None)
+            ap.params['stationsInRange'].pop(sta, None)
 
     @classmethod
     def ap_out_of_range(cls, sta, ap, wlan, ap_wlan):
-        """When ap is out of range
-
-        :param sta: station
-        :param ap: access point
-        :param wlan: wlan ID"""
+        "When ap is out of range"
         if ap == sta.params['associatedTo'][wlan]:
             if 'encrypt' in ap.params and 'ieee80211r' not in ap.params:
                 if 'wpa' in ap.params['encrypt'][ap_wlan]:
-                    os.system('rm %s_%s.staconf' % (sta.name, wlan))
-                    pidfile = "mn%d_%s_%s_wpa.pid" \
-                              % (os.getpid(), sta.name, wlan)
-                    os.system('pkill -f \'wpa_supplicant -B -Dnl80211 -P %s -i '
-                              '%s\'' % (pidfile, sta.params['wlan'][wlan]))
-                    if os.path.exists(('/var/run/wpa_supplicant/%s'
-                                       % sta.params['wlan'][wlan])):
-                        os.system('rm /var/run/wpa_supplicant/%s'
-                                  % sta.params['wlan'][wlan])
-            elif cls.wmediumd_mode and cls.wmediumd_mode != 3:
+                    cls.remove_staconf(sta, wlan)
+                    cls.kill_wpasupprocess(sta, wlan)
+                    cls.check_if_wpafile_exist(sta, wlan)
+            if cls.wmediumd_mode and cls.wmediumd_mode != 3:
                 Association.setSNRWmediumd(sta, ap, snr=-10)
-                sta.params['rssi'][wlan] = 0
             if 'ieee80211r' not in ap.params:
-                Association.disconnect(sta, sta.params['wlan'][wlan])
-            sta.params['associatedTo'][wlan] = ''
-            sta.params['channel'][wlan] = 0
-            if sta in ap.params['associatedStations']:
-                ap.params['associatedStations'].remove(sta)
-            if ap in sta.params['apsInRange']:
-                sta.params['apsInRange'].pop(ap, None)
-                ap.params['stationsInRange'].pop(sta, None)
+                Association.disconnect(sta, wlan)
+            cls.remove_assoc_from_params(sta, ap)
         elif not sta.params['associatedTo'][wlan]:
             sta.params['rssi'][wlan] = 0
 
     @classmethod
-    def ap_in_range(cls, sta, ap, wlan, dist):
-        """When ap is in range
+    def record_rssi(cls, sta, wlan):
+        os.system('hwsim_mgmt -k %s %s >/dev/null 2>&1'
+                  % (sta.phyID[wlan],
+                     abs(int(sta.params['rssi'][wlan]))))
 
-        :param sta: station
-        :param ap: access point
-        :param wlan: wlan ID
-        :param dist: distance between source and destination"""
+    @classmethod
+    def ap_in_range(cls, sta, ap, wlan, dist):
+        "When ap is in range"
         rssi = sta.get_rssi(ap, wlan, dist)
         sta.params['apsInRange'][ap] = rssi
         ap.params['stationsInRange'][sta] = rssi
         if ap == sta.params['associatedTo'][wlan]:
+            sta.params['rssi'][wlan] = rssi
             if cls.rec_rssi:
-                sta.params['rssi'][wlan] = rssi
-                os.system('hwsim_mgmt -k %s %s >/dev/null 2>&1'
-                          % (sta.phyID[wlan],
-                             abs(int(sta.params['rssi'][wlan]))))
+                cls.record_rssi(sta, wlan)
             if sta not in ap.params['associatedStations']:
                 ap.params['associatedStations'].append(sta)
             if dist >= 0.01:
-                if 'bgscan_threshold' in sta.params or 'active_scan' in sta.params \
-                and ('encrypt' in sta.params and 'wpa' in sta.params['encrypt'][wlan]):
+                if 'bgscan_threshold' in sta.params or 'active_scan' in sta.params and\
+                        ('encrypt' in sta.params and 'wpa' in sta.params['encrypt'][wlan]):
                     pass
-                else :
-                    sta.params['rssi'][wlan] = rssi
+                else:
                     if cls.wmediumd_mode and cls.wmediumd_mode != 3:
                         Association.setSNRWmediumd(
                             sta, ap, snr=sta.params['rssi'][wlan] - (-91))
@@ -178,10 +188,7 @@ class mobility(object):
 
     @classmethod
     def check_association(cls, sta, wlan, ap_wlan):
-        """check association
-
-        :param sta: station
-        :param wlan: wlan ID"""
+        "check association"
         aps = []
         for ap in cls.aps:
             dist = sta.get_distance_to(ap)
@@ -196,11 +203,7 @@ class mobility(object):
 
     @classmethod
     def handover(cls, sta, ap, wlan, ap_wlan):
-        """handover
-
-        :param sta: station
-        :param ap: access point
-        :param wlan: wlan ID"""
+        "handover"
         changeAP = False
 
         "Association Control: mechanisms that optimize the use of the APs"

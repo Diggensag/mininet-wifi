@@ -481,8 +481,7 @@ class Node_wifi(Node):
         if dist < ap.params['range'][wlan] or dist == 100000:
             if self.params['associatedTo'][wlan] != ap:
                 if self.params['associatedTo'][wlan]:
-                    Association.disconnect(self, intf)
-                    node.params['rssi'][0] = 0
+                    Association.disconnect(self, wlan)
                 Association.associate_infra(self, ap, **params)
                 wirelessLink(self, ap, wlan, 0, dist)
             else:

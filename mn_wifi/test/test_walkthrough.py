@@ -430,7 +430,7 @@ class testWalkthrough(unittest.TestCase):
         "Start Mininet-WiFi with handover, then test handover"
         p = pexpect.spawn(
             'python examples/handover.py -p')
-        sleep(2)
+        sleep(3)
         p.sendline('sta1 iw dev sta1-wlan0 info | grep ssid')
         p.expect('ssid-ap1')
         p.expect(self.prompt)
@@ -446,7 +446,7 @@ class testWalkthrough(unittest.TestCase):
         pexpect.spawn(
             'service network-manager stop')
         p = pexpect.spawn(
-            'python examples/forwardingBySSID.py')
+            'python examples/forwardingBySSID.py -p')
         sleep(3)
         p.sendline('sta1 iw dev sta1-wlan0 info | grep ssid')
         p.expect('ssid1')
