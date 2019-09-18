@@ -52,7 +52,7 @@ def topology(autoTxPower):
     nodes['sta5'] = net.addStation('sta5', position='90,10,0')
 
     car1 = net.addStation('car1', position='10.0,20.0,0.0', range=30)
-    arbiter1 = net.addStation('arbiter1', position='45.0,20.0,0.0', range=50)
+    arbiter1 = net.addStation('arbiter1', position='50.0,12.0,0.0', range=50)
 
     net.setPropagationModel(model="logDistance", exp=4)
 
@@ -106,7 +106,7 @@ def topology(autoTxPower):
     sleep(10)
    
     info("*** Starting nodes...\n")
-    arbiter1.cmd('python2 geonode.py --arbiter arbiter1-wlan0 &')
+    #arbiter1.cmd('python2 geonode.py --arbiter arbiter1-wlan0 &')
 
     for key in nodes.keys():
         command = "python2 loggingnode.py --arbiter "
@@ -115,10 +115,14 @@ def topology(autoTxPower):
     print "Starting nodes: done"
 
     sleep(10)
+    
+    nodes.get('sta5').cmd('xterm &')
+
     for i in range(0,300):
         car1paramtext = str(str(car1.params['position'][0]) + " " +str( car1.params['position'][1]) + " " + str(car1.params['position'][2]))
         car1.cmd('python2 loggingnode.py --livecar car1-wlan0 --xyz ' + car1paramtext)
         sleep(1)
+    
 
     info("*** Running CLI\n")
     CLI_wifi(net)

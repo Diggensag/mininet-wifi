@@ -41,7 +41,7 @@ def runMulticastListener(interfaceV6, nodelogger):
     run = True
     try:
         while run==True:
-            data, addr = sock.recvfrom(40960)
+            data, addr = sock.recvfrom(1024)
             nodelogger.debug("\nGot Message: " + str(data) +" | from: " + str(addr))
             print "\nGot Message: " + str(data) +" | from: " + str(addr) + "\n"
   
